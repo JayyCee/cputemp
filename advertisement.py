@@ -24,6 +24,11 @@ import dbus.service
 
 from bletools import BleTools
 
+from inspect import getframeinfo, stack
+
+from debuginfo import debuginfo
+
+
 BLUEZ_SERVICE_NAME = "org.bluez"
 LE_ADVERTISING_MANAGER_IFACE = "org.bluez.LEAdvertisingManager1"
 DBUS_OM_IFACE = "org.freedesktop.DBus.ObjectManager"
@@ -119,6 +124,7 @@ class Advertisement(dbus.service.Object):
 
     def register_ad_callback(self):
         print("GATT advertisement registered")
+        debuginfo("GATT advertisement registered")
 
     def register_ad_error_callback(self):
         print("Failed to register GATT advertisement")

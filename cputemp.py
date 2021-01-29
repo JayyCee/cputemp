@@ -28,14 +28,7 @@ from service import Application, Service, Characteristic, Descriptor
 from gpiozero import CPUTemperature
 
 
-
-from inspect import getframeinfo, stack
-
-
-def debuginfo(msg):
-    caller = getframeinfo(stack()[1][0])
-
-    print("%s:%d - %s" % (caller.filename, caller.lineno, message)) # python3 syntax print
+from debuginfo import debuginfo
 
 
 GATT_CHRC_IFACE = "org.bluez.GattCharacteristic1"
@@ -88,7 +81,9 @@ class TempCharacteristic(Characteristic):
         for c in strtemp:
             value.append(dbus.Byte(c.encode()))
 
-        print("value = ", value)
+
+        debuginfo('value = {}'.format(value))
+
         return value
 
     def set_temperature_callback(self):
@@ -100,20 +95,25 @@ class TempCharacteristic(Characteristic):
 
     def StartNotify(self):
         if self.notifying:
+            debuginfo("already notifying")
             return
 
+        debuginfo("set notifying to True")
         self.notifying = True
 
         value = self.get_temperature()
+        debuginfo("value = {}".format(value))
+
         self.PropertiesChanged(GATT_CHRC_IFACE, {"Value": value}, [])
         self.add_timeout(NOTIFY_TIMEOUT, self.set_temperature_callback)
 
     def StopNotify(self):
         self.notifying = False
+        debuginfo("set notifying to False")
 
     def ReadValue(self, options):
         value = self.get_temperature()
-
+        debuginfo("value = {}".format(value))
         return value
 
 class TempDescriptor(Descriptor):
@@ -133,6 +133,8 @@ class TempDescriptor(Descriptor):
         for c in desc:
             value.append(dbus.Byte(c.encode()))
 
+        debuginfo("value = {}".format(value))
+
         return value
 
 class UnitCharacteristic(Characteristic):
@@ -147,11 +149,10 @@ class UnitCharacteristic(Characteristic):
     def WriteValue(self, value, options):
 
         # this is a write from the connected peer:
-        #debuginfo("inside WriteValue():")
-        print("value = ", value)
 
         val = str(value[0]).upper()
-        print("val = ", val)
+        debuginfo("value = {}".format(value))
+
 
         if val == "C":
             self.service.set_farenheit(False)
@@ -166,8 +167,8 @@ class UnitCharacteristic(Characteristic):
         else: val = "C"
         value.append(dbus.Byte(val.encode()))
 
-        #debuginfo("inside ReadValue():")
-        print("value = ", value)
+        debuginfo("value = {}".format(value))
+
         return value
 
 class UnitDescriptor(Descriptor):
@@ -186,6 +187,8 @@ class UnitDescriptor(Descriptor):
 
         for c in desc:
             value.append(dbus.Byte(c.encode()))
+
+        debuginfo("value = {}".format(value))
 
         return value
 
