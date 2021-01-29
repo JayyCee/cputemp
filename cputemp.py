@@ -27,6 +27,17 @@ from advertisement import Advertisement
 from service import Application, Service, Characteristic, Descriptor
 from gpiozero import CPUTemperature
 
+
+
+from inspect import getframeinfo, stack
+
+
+def debuginfo(msg):
+    caller = getframeinfo(stack()[1][0])
+
+    print("%s:%d - %s" % (caller.filename, caller.lineno, message)) # python3 syntax print
+
+
 GATT_CHRC_IFACE = "org.bluez.GattCharacteristic1"
 NOTIFY_TIMEOUT = 5000
 
@@ -77,6 +88,7 @@ class TempCharacteristic(Characteristic):
         for c in strtemp:
             value.append(dbus.Byte(c.encode()))
 
+        print("value = ", value)
         return value
 
     def set_temperature_callback(self):
@@ -133,19 +145,29 @@ class UnitCharacteristic(Characteristic):
         self.add_descriptor(UnitDescriptor(self))
 
     def WriteValue(self, value, options):
+
+        # this is a write from the connected peer:
+        #debuginfo("inside WriteValue():")
+        print("value = ", value)
+
         val = str(value[0]).upper()
+        print("val = ", val)
+
         if val == "C":
             self.service.set_farenheit(False)
         elif val == "F":
             self.service.set_farenheit(True)
 
     def ReadValue(self, options):
+        # this is a read from the connected peer:
         value = []
 
         if self.service.is_farenheit(): val = "F"
         else: val = "C"
         value.append(dbus.Byte(val.encode()))
 
+        #debuginfo("inside ReadValue():")
+        print("value = ", value)
         return value
 
 class UnitDescriptor(Descriptor):
